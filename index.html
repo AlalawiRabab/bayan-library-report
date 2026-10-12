@@ -192,7 +192,13 @@
   }
 
   @media screen and (max-width: 860px) {
+    body:not(.print-mode) { overflow-x: hidden; }
+    body:not(.print-mode) .toolbar { gap: 6px; padding: 8px; }
+    body:not(.print-mode) .btn { font-size: 13px; padding: 8px 10px; }
     body:not(.print-mode) .page { width: 100%; margin: 0; padding: 14px; }
+    body:not(.print-mode) .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    body:not(.print-mode) .table-wrap table { min-width: 560px; }
+    body:not(.print-mode) .title h1 { font-size: 20px; padding: 8px 22px; }
     body:not(.print-mode) .two-cols { grid-template-columns: 1fr; }
     body:not(.print-mode) .evidence { grid-template-columns: repeat(2, 1fr); }
     body:not(.print-mode) .header { grid-template-columns: 1fr; text-align: center; }
@@ -234,6 +240,7 @@
   <div class="title"><h1>تقرير مكتبة البيان</h1></div>
 
   <div class="section-title"><span class="label">بيانات المتابعة</span></div>
+  <div class="table-wrap">
   <table>
     <thead>
       <tr>
@@ -247,6 +254,7 @@
     </thead>
     <tbody id="rows"></tbody>
   </table>
+  </div>
 
   <div class="section-title"><span class="label">مرئيات المعلمة</span></div>
   <div class="box" contenteditable="true" data-key="notes" data-placeholder="اكتبي مرئياتك وملاحظاتك هنا..."></div>
