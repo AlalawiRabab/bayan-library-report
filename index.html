@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقرير مكتبة البيان - الابتدائية 127</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #6b4fa0;
+    --primary-light: #ece6f6;
+    --accent: #1fa3c4;
+    --gold: #e9b824;
+    --border: #cfc4e3;
+    --text: #2c2540;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+    background: #f1eef7;
+    color: var(--text);
+  }
+
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    padding: 12px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  }
+  .btn {
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    border: none; border-radius: 10px; padding: 10px 18px; cursor: pointer;
+    color: #fff; background: var(--primary); transition: .2s;
+  }
+  .btn:hover { opacity: .88; transform: translateY(-1px); }
+  .btn.accent { background: var(--accent); }
+  .btn.gold { background: var(--gold); color: #3a2c00; }
+  .btn.danger { background: #d9534f; }
+  .btn.small { font-size: 13px; padding: 6px 12px; }
+
+  .page {
+    width: 210mm; min-height: 297mm;
+    margin: 20px auto; padding: 14mm 14mm 12mm;
+    background: #fff; box-shadow: 0 4px 24px rgba(0,0,0,.12);
+    border-top: 8px solid var(--primary);
+  }
+
+  /* رأس الصفحة */
+  .header {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    gap: 10px; padding-bottom: 12px; border-bottom: 3px double var(--primary);
+  }
+  .header .right { font-weight: 700; line-height: 1.9; font-size: 15px; }
+  .header .center { text-align: center; }
+  .header .center img { height: 95px; object-fit: contain; }
+  .header .left { text-align: left; line-height: 1.9; font-size: 14px; }
+  .header .left span[contenteditable] {
+    display: inline-block; min-width: 110px; border-bottom: 1px dotted #999; text-align: center;
+  }
+
+  .title {
+    text-align: center; margin: 16px 0 14px;
+  }
+  .title h1 {
+    display: inline-block; margin: 0; padding: 8px 34px;
+    font-size: 24px; font-weight: 800; color: #fff;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 30px;
+  }
+
+  .section-title {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 18px 0 8px; font-size: 17px; font-weight: 800; color: var(--primary);
+  }
+  .section-title::before {
+    content: ""; width: 6px; height: 22px; background: var(--gold);
+    border-radius: 3px; margin-left: 8px;
+  }
+  .section-title .label { flex: 1; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th {
+    background: var(--primary); color: #fff; padding: 9px 6px;
+    border: 1px solid var(--primary); font-weight: 700;
+  }
+  td {
+    border: 1px solid var(--border); padding: 8px 6px; text-align: center;
+    min-height: 34px; height: 36px; vertical-align: middle;
+  }
+  tbody tr:nth-child(even) td { background: #faf8fd; }
+  td[contenteditable]:focus, .box[contenteditable]:focus,
+  span[contenteditable]:focus { outline: 2px solid var(--accent); background: #f0fbff; }
+  td.del-cell { width: 34px; border: none; background: transparent !important; }
+  .del-row {
+    border: none; background: #f8d7da; color: #a12; border-radius: 6px;
+    cursor: pointer; font-size: 14px; width: 26px; height: 26px;
+  }
+
+  .box {
+    min-height: 110px; padding: 10px 12px;
+    border: 1.5px dashed var(--border); border-radius: 12px;
+    background: #fdfcff; line-height: 1.9; font-size: 15px; white-space: pre-wrap;
+  }
+  .box:empty::before { content: attr(data-placeholder); color: #aaa; }
+
+  .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* الشواهد */
+  .evidence {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    border: 1.5px dashed var(--border); border-radius: 12px; padding: 10px;
+    min-height: 140px;
+  }
+  .evidence .item {
+    position: relative; border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border); aspect-ratio: 4 / 3; background: #f5f5f5;
+  }
+  .evidence .item img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .evidence .item button {
+    position: absolute; top: 5px; left: 5px; border: none; border-radius: 50%;
+    width: 26px; height: 26px; background: rgba(217,83,79,.9); color: #fff; cursor: pointer;
+  }
+  .evidence .add {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; aspect-ratio: 4 / 3; border-radius: 10px; cursor: pointer;
+    border: 2px dashed var(--accent); color: var(--accent); font-weight: 700;
+    background: #f3fbfd;
+  }
+  .evidence .add span { font-size: 34px; line-height: 1; }
+
+  .signatures {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+    margin-top: 26px; font-weight: 700; font-size: 15px;
+  }
+  .signatures div { text-align: center; line-height: 2.4; }
+  .signatures span[contenteditable] {
+    display: inline-block; min-width: 160px; border-bottom: 1px dotted #888; font-weight: 500;
+  }
+
+  .footer {
+    margin-top: 20px; padding-top: 8px; border-top: 2px solid var(--primary-light);
+    text-align: center; font-size: 12px; color: #888;
+  }
+
+  /* تخطيط الطباعة / PDF: صفحة A4 عمودية واحدة (194×281 مم بعد الهوامش) */
+  @page { size: A4 portrait; margin: 8mm; }
+
+  body.print-mode { background: #fff; }
+  .print-mode .toolbar, .print-mode .no-print, .print-mode .del-cell,
+  .print-mode .evidence .add, .print-mode .evidence .item button { display: none !important; }
+  .print-mode .page {
+    width: 194mm; min-height: 0; margin: 0; padding: 0 1mm;
+    box-shadow: none; border-top: 5px solid var(--primary);
+  }
+  .print-mode .header { padding: 2mm 0 2.5mm; gap: 6px; }
+  .print-mode .header .right { font-size: 13px; line-height: 1.65; }
+  .print-mode .header .left { font-size: 12.5px; line-height: 1.8; }
+  .print-mode .header .center img { height: 25mm; }
+  .print-mode .title { margin: 3mm 0 2mm; }
+  .print-mode .title h1 { font-size: 20px; padding: 5px 30px; }
+  .print-mode .section-title { margin: 3mm 0 1.5mm; font-size: 14.5px; }
+  .print-mode .section-title::before { height: 17px; }
+  .print-mode table { font-size: 12.5px; }
+  .print-mode th { padding: 5px 4px; line-height: 1.35; }
+  .print-mode td { padding: 4px 5px; height: 8mm; line-height: 1.45; }
+  .print-mode td, .print-mode .box { overflow: visible; word-wrap: break-word; overflow-wrap: anywhere; }
+  .print-mode .box {
+    min-height: 15mm; padding: 5px 10px; font-size: 13px; line-height: 1.6;
+    border-style: solid; border-width: 1px;
+  }
+  .print-mode .box:empty::before { content: ""; }
+  .print-mode .evidence {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+    gap: 2.5mm; padding: 2.5mm; min-height: 14mm; border-style: solid; border-width: 1px;
+  }
+  .print-mode .evidence .item { aspect-ratio: auto; height: auto; background: none; }
+  .print-mode .evidence .item img {
+    height: var(--img-h, 42mm); width: auto; max-width: 92mm; object-fit: contain;
+  }
+  .print-mode .signatures { margin-top: 4mm; font-size: 13.5px; }
+  .print-mode .signatures div { line-height: 2.1; }
+  .print-mode .footer { margin-top: 3mm; padding-top: 4px; font-size: 11px; }
+  .print-mode table, .print-mode tr, .print-mode .item, .print-mode .box,
+  .print-mode .header, .print-mode .signatures { break-inside: avoid; page-break-inside: avoid; }
+
+  @media print {
+    html, body { margin: 0; padding: 0; background: #fff; }
+    .toolbar, .no-print, .del-cell, .evidence .add, .evidence .item button { display: none !important; }
+    .page { break-after: avoid; page-break-after: avoid; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
+
+  @media screen and (max-width: 860px) {
+    body:not(.print-mode) .page { width: 100%; margin: 0; padding: 14px; }
+    body:not(.print-mode) .two-cols { grid-template-columns: 1fr; }
+    body:not(.print-mode) .evidence { grid-template-columns: repeat(2, 1fr); }
+    body:not(.print-mode) .header { grid-template-columns: 1fr; text-align: center; }
+    body:not(.print-mode) .header .left { text-align: center; }
+    body:not(.print-mode) table { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button class="btn" onclick="exportPDF()">📄 تصدير PDF</button>
+  <button class="btn accent" onclick="addRow()">➕ إضافة صف</button>
+  <button class="btn gold" onclick="document.getElementById('imgInput').click()">🖼️ إضافة شواهد</button>
+  <button class="btn danger" onclick="clearAll()">🗑️ تقرير جديد</button>
+</div>
+
+<div class="page" id="report">
+
+  <div class="header">
+    <div class="right">
+      المملكة العربية السعودية<br>
+      وزارة التعليم<br>
+      إدارة تعليم المدينة المنورة<br>
+      مكتب قباء<br>
+      الابتدائية 127
+    </div>
+    <div class="center">
+      <img src="logo.png" alt="شعار الابتدائية 127">
+    </div>
+    <div class="left">
+      العام الدراسي: <span contenteditable="true" data-key="year"></span><br>
+      الفصل الدراسي: <span contenteditable="true" data-key="term"></span><br>
+      الصف: <span contenteditable="true" data-key="grade"></span><br>
+      المعلمة: <span contenteditable="true" data-key="teacherTop"></span>
+    </div>
+  </div>
+
+  <div class="title"><h1>تقرير مكتبة البيان</h1></div>
+
+  <div class="section-title"><span class="label">بيانات المتابعة</span></div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:16%">التاريخ</th>
+        <th style="width:14%">عدد الطلاب الإجمالي</th>
+        <th style="width:15%">عدد الطلاب لم يسجلوا دخول</th>
+        <th>إجراءات المعلمة</th>
+        <th style="width:14%">عدد القصص المنشورة</th>
+        <th class="del-cell no-print"></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="section-title"><span class="label">مرئيات المعلمة</span></div>
+  <div class="box" contenteditable="true" data-key="notes" data-placeholder="اكتبي مرئياتك وملاحظاتك هنا..."></div>
+
+  <div class="section-title"><span class="label">التحفيز والتكريم</span></div>
+  <div class="box" contenteditable="true" data-key="reward" data-placeholder="اكتبي أساليب التحفيز وأسماء الطالبات المكرّمات..."></div>
+
+  <div class="section-title">
+    <span class="label">الشواهد</span>
+    <button class="btn small accent no-print" onclick="document.getElementById('imgInput').click()">إضافة صور</button>
+  </div>
+  <div class="evidence" id="evidence">
+    <label class="add" for="imgInput"><span>+</span>إضافة صورة</label>
+  </div>
+  <input type="file" id="imgInput" accept="image/*" multiple hidden>
+
+  <div class="signatures">
+    <div>المعلمة: <span contenteditable="true" data-key="teacherSign"></span><br>التوقيع: ...................</div>
+    <div>مديرة المدرسة: <span contenteditable="true" data-key="principal"></span><br>التوقيع: ...................</div>
+  </div>
+
+  <div class="footer">إدارة تعليم المدينة المنورة — مكتب قباء — الابتدائية 127 — تقرير مكتبة البيان</div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'bayan-report-127';
+  const rowsEl = document.getElementById('rows');
+  const evidenceEl = document.getElementById('evidence');
+  const addLabel = evidenceEl.querySelector('.add');
+  let images = [];
+
+  function addRow(data = {}) {
+    const tr = document.createElement('tr');
+    const today = new Date().toLocaleDateString('ar-SA-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' });
+    ['date', 'total', 'absent', 'actions', 'stories'].forEach(k => {
+      const td = document.createElement('td');
+      td.contentEditable = 'true';
+      td.dataset.field = k;
+      td.textContent = data[k] ?? (k === 'date' && !data.__loaded ? today : '');
+      if (k === 'actions') td.style.textAlign = 'right';
+      tr.appendChild(td);
+    });
+    const del = document.createElement('td');
+    del.className = 'del-cell no-print';
+    del.innerHTML = '<button class="del-row" title="حذف الصف">×</button>';
+    del.querySelector('button').onclick = () => { tr.remove(); save(); };
+    tr.appendChild(del);
+    rowsEl.appendChild(tr);
+    save();
+  }
+
+  function renderImages() {
+    evidenceEl.querySelectorAll('.item').forEach(e => e.remove());
+    images.forEach((src, i) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `<img src="${src}" alt="شاهد ${i + 1}"><button title="حذف">×</button>`;
+      div.querySelector('button').onclick = () => { images.splice(i, 1); renderImages(); save(); };
+      evidenceEl.insertBefore(div, addLabel);
+    });
+  }
+
+  function resizeImage(file) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const max = 1000;
+          const scale = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width = img.width * scale; c.height = img.height * scale;
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('imgInput').addEventListener('change', async e => {
+    for (const f of e.target.files) images.push(await resizeImage(f));
+    e.target.value = '';
+    renderImages(); save();
+  });
+
+  function save() {
+    const data = { fields: {}, rows: [], images };
+    document.querySelectorAll('[data-key]').forEach(el => data.fields[el.dataset.key] = el.innerText);
+    rowsEl.querySelectorAll('tr').forEach(tr => {
+      const r = {};
+      tr.querySelectorAll('[data-field]').forEach(td => r[td.dataset.field] = td.innerText);
+      data.rows.push(r);
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {}
+  }
+
+  function load() {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (_) {}
+    if (!data) { for (let i = 0; i < 4; i++) addRow(i ? { date: '' } : {}); return; }
+    Object.entries(data.fields || {}).forEach(([k, v]) => {
+      const el = document.querySelector(`[data-key="${k}"]`);
+      if (el) el.innerText = v;
+    });
+    (data.rows || []).forEach(r => addRow({ ...r, __loaded: true }));
+    if (!rowsEl.children.length) addRow();
+    images = data.images || [];
+    renderImages();
+  }
+
+  function clearAll() {
+    if (!confirm('هل تريدين مسح جميع البيانات والبدء بتقرير جديد؟')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    document.querySelectorAll('[data-key]').forEach(el => el.innerText = '');
+    rowsEl.innerHTML = ''; images = []; renderImages();
+    for (let i = 0; i < 4; i++) addRow(i ? { date: '' } : {});
+  }
+
+  const MM = 96 / 25.4;
+  const PRINT_W_MM = 194;
+  const PRINT_H_MM = 279;
+  const IMG_HEIGHTS_MM = [42, 36, 30, 26, 22, 18];
+  const MIN_ZOOM = 0.72;
+  const reportEl = document.getElementById('report');
+
+  function contentHeightAt(widthMm) {
+    reportEl.style.width = widthMm + 'mm';
+    return reportEl.getBoundingClientRect().height;
+  }
+
+  function fitToPage() {
+    document.body.classList.add('print-mode');
+    reportEl.style.zoom = '';
+    const avail = PRINT_H_MM * MM;
+
+    for (const h of IMG_HEIGHTS_MM) {
+      reportEl.style.setProperty('--img-h', h + 'mm');
+      if (contentHeightAt(PRINT_W_MM) <= avail) return;
+    }
+
+    let zoom = Math.max(MIN_ZOOM, Math.floor(avail / contentHeightAt(PRINT_W_MM) * 100) / 100);
+    while (zoom > MIN_ZOOM && contentHeightAt(PRINT_W_MM / zoom) * zoom > avail) zoom -= 0.01;
+    contentHeightAt(PRINT_W_MM / zoom);
+    reportEl.style.zoom = zoom;
+  }
+
+  function resetPrintLayout() {
+    document.body.classList.remove('print-mode');
+    reportEl.style.zoom = '';
+    reportEl.style.width = '';
+    reportEl.style.removeProperty('--img-h');
+  }
+
+  function exportPDF() {
+    save();
+    const d = new Date().toISOString().slice(0, 10);
+    const old = document.title;
+    document.title = `تقرير مكتبة البيان - ${d}`;
+    fitToPage();
+    window.print();
+    setTimeout(() => document.title = old, 500);
+  }
+
+  window.addEventListener('beforeprint', fitToPage);
+  window.addEventListener('afterprint', resetPrintLayout);
+  document.addEventListener('input', save);
+  load();
+</script>
+</body>
+</html>
