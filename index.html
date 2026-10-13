@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تقرير مكتبة البيان - الابتدائية 127</title>
+<title>تقرير مكتبة البيان - الابتدائية ١٢٧</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -38,6 +40,15 @@
   .btn.gold { background: var(--gold); color: #3a2c00; }
   .btn.danger { background: #d9534f; }
   .btn.small { font-size: 13px; padding: 6px 12px; }
+  .btn:disabled { opacity: .6; cursor: wait; transform: none; }
+  .privacy { flex-basis: 100%; text-align: center; font-size: 12.5px; color: #6b6480; }
+
+  .busy {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    align-items: center; justify-content: center;
+    background: rgba(241, 238, 247, .96); font-size: 18px; font-weight: 700; color: var(--primary);
+  }
+  .busy.show { display: flex; }
 
   .page {
     width: 210mm; min-height: 297mm;
@@ -186,7 +197,7 @@
 
   @media print {
     html, body { margin: 0; padding: 0; background: #fff; }
-    .toolbar, .no-print, .del-cell, .evidence .add, .evidence .item button { display: none !important; }
+    .toolbar, .busy, .no-print, .del-cell, .evidence .add, .evidence .item button { display: none !important; }
     .page { break-after: avoid; page-break-after: avoid; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   }
@@ -210,11 +221,14 @@
 <body>
 
 <div class="toolbar">
-  <button class="btn" onclick="exportPDF()">📄 تصدير PDF</button>
+  <button class="btn" id="pdfBtn" onclick="downloadPDF()">📥 تنزيل التقرير PDF</button>
   <button class="btn accent" onclick="addRow()">➕ إضافة صف</button>
   <button class="btn gold" onclick="document.getElementById('imgInput').click()">🖼️ إضافة شواهد</button>
   <button class="btn danger" onclick="clearAll()">🗑️ تقرير جديد</button>
+  <div class="privacy">🔒 بيانات التقرير والصور تُحفظ على جهازك فقط، ولا يراها أحد غيرك.</div>
 </div>
+
+<div class="busy" id="busy"><div>⏳ جارٍ تجهيز ملف PDF...</div></div>
 
 <div class="page" id="report">
 
@@ -223,17 +237,17 @@
       المملكة العربية السعودية<br>
       وزارة التعليم<br>
       إدارة تعليم المدينة المنورة<br>
-      مكتب قباء<br>
-      الابتدائية 127
+      مكتب تعليم قباء<br>
+      الابتدائية ١٢٧
     </div>
     <div class="center">
-      <img src="logo.png" alt="شعار الابتدائية 127">
+      <img src="logo.png" alt="شعار الابتدائية ١٢٧">
     </div>
     <div class="left">
+      اسم المعلمة: <span contenteditable="true" data-key="teacherTop"></span><br>
       العام الدراسي: <span contenteditable="true" data-key="year"></span><br>
       الفصل الدراسي: <span contenteditable="true" data-key="term"></span><br>
-      الصف: <span contenteditable="true" data-key="grade"></span><br>
-      المعلمة: <span contenteditable="true" data-key="teacherTop"></span>
+      الصف: <span contenteditable="true" data-key="grade"></span>
     </div>
   </div>
 
@@ -273,14 +287,14 @@
 
   <div class="signatures">
     <div>المعلمة: <span contenteditable="true" data-key="teacherSign"></span><br>التوقيع: ...................</div>
-    <div>مديرة المدرسة: <span contenteditable="true" data-key="principal"></span><br>التوقيع: ...................</div>
+    <div>قائدة المدرسة / ليلى الحربي<br>التوقيع: ...................</div>
   </div>
 
-  <div class="footer">إدارة تعليم المدينة المنورة — مكتب قباء — الابتدائية 127 — تقرير مكتبة البيان</div>
+  <div class="footer">إدارة تعليم المدينة المنورة — مكتب تعليم قباء — الابتدائية ١٢٧ — تقرير مكتبة البيان</div>
 </div>
 
 <script>
-  const STORAGE_KEY = 'bayan-report-127';
+  const STORAGE_KEY = 'bayan-report-template-v1';
   const rowsEl = document.getElementById('rows');
   const evidenceEl = document.getElementById('evidence');
   const addLabel = evidenceEl.querySelector('.add');
@@ -288,12 +302,11 @@
 
   function addRow(data = {}) {
     const tr = document.createElement('tr');
-    const today = new Date().toLocaleDateString('ar-SA-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' });
     ['date', 'total', 'absent', 'actions', 'stories'].forEach(k => {
       const td = document.createElement('td');
       td.contentEditable = 'true';
       td.dataset.field = k;
-      td.textContent = data[k] ?? (k === 'date' && !data.__loaded ? today : '');
+      td.textContent = data[k] ?? '';
       if (k === 'actions') td.style.textAlign = 'right';
       tr.appendChild(td);
     });
@@ -356,23 +369,23 @@
   function load() {
     let data = null;
     try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (_) {}
-    if (!data) { for (let i = 0; i < 4; i++) addRow(i ? { date: '' } : {}); return; }
+    if (!data) { for (let i = 0; i < 4; i++) addRow(); return; }
     Object.entries(data.fields || {}).forEach(([k, v]) => {
       const el = document.querySelector(`[data-key="${k}"]`);
       if (el) el.innerText = v;
     });
-    (data.rows || []).forEach(r => addRow({ ...r, __loaded: true }));
+    (data.rows || []).forEach(r => addRow(r));
     if (!rowsEl.children.length) addRow();
     images = data.images || [];
     renderImages();
   }
 
   function clearAll() {
-    if (!confirm('هل تريدين مسح جميع البيانات والبدء بتقرير جديد؟')) return;
+    if (!confirm('سيتم مسح جميع المدخلات والصور. هل تريد بدء تقرير جديد؟')) return;
     localStorage.removeItem(STORAGE_KEY);
     document.querySelectorAll('[data-key]').forEach(el => el.innerText = '');
     rowsEl.innerHTML = ''; images = []; renderImages();
-    for (let i = 0; i < 4; i++) addRow(i ? { date: '' } : {});
+    for (let i = 0; i < 4; i++) addRow();
   }
 
   const MM = 96 / 25.4;
@@ -387,7 +400,7 @@
     return reportEl.getBoundingClientRect().height;
   }
 
-  function fitToPage() {
+  function fitToPage(allowZoom = true) {
     document.body.classList.add('print-mode');
     reportEl.style.zoom = '';
     const avail = PRINT_H_MM * MM;
@@ -396,6 +409,7 @@
       reportEl.style.setProperty('--img-h', h + 'mm');
       if (contentHeightAt(PRINT_W_MM) <= avail) return;
     }
+    if (allowZoom === false) return;
 
     let zoom = Math.max(MIN_ZOOM, Math.floor(avail / contentHeightAt(PRINT_W_MM) * 100) / 100);
     while (zoom > MIN_ZOOM && contentHeightAt(PRINT_W_MM / zoom) * zoom > avail) zoom -= 0.01;
@@ -410,14 +424,69 @@
     reportEl.style.removeProperty('--img-h');
   }
 
-  function exportPDF() {
-    save();
+  function pdfFileName() {
+    const teacher = document.querySelector('[data-key="teacherTop"]').innerText.trim();
     const d = new Date().toISOString().slice(0, 10);
+    return `تقرير مكتبة البيان${teacher ? ' - ' + teacher : ''} - ${d}`.replace(/[\\/:*?"<>|]/g, '-');
+  }
+
+  function printFallback() {
     const old = document.title;
-    document.title = `تقرير مكتبة البيان - ${d}`;
+    document.title = pdfFileName();
     fitToPage();
     window.print();
     setTimeout(() => document.title = old, 500);
+  }
+
+  // html2canvas breaks Arabic shaping (e.g. "1448هـ") when a digit touches an Arabic letter;
+  // a zero-width space between them renders identically and keeps the letters joined.
+  function separateDigitsFromArabic(doc) {
+    const digit = '0-9\u0660-\u0669\u06F0-\u06F9';
+    const letter = '\u0621-\u064A\u0640';
+    const re = new RegExp(`([${digit}])(?=[${letter}])|([${letter}])(?=[${digit}])`, 'g');
+    const walker = doc.createTreeWalker(doc.getElementById('report'), NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (re.test(n.data)) n.data = n.data.replace(re, '$1$2\u200B');
+      re.lastIndex = 0;
+    }
+  }
+
+  async function buildPDF() {
+    if (document.activeElement) document.activeElement.blur();
+    if (document.fonts) await document.fonts.ready;
+    fitToPage(false);
+    const canvas = await html2canvas(reportEl, {
+      scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false,
+      windowWidth: Math.max(1000, reportEl.scrollWidth + 60),
+      onclone: separateDigitsFromArabic
+    });
+    const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+    const maxW = 194, maxH = 281;
+    let w = maxW, h = canvas.height * maxW / canvas.width;
+    if (h > maxH) { h = maxH; w = canvas.width * maxH / canvas.height; }
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (210 - w) / 2, 8, w, h);
+    return pdf;
+  }
+
+  async function downloadPDF() {
+    save();
+    if (!window.html2canvas || !window.jspdf) { printFallback(); return; }
+    const btn = document.getElementById('pdfBtn');
+    const busy = document.getElementById('busy');
+    btn.disabled = true;
+    busy.classList.add('show');
+    try {
+      const pdf = await buildPDF();
+      pdf.save(pdfFileName() + '.pdf');
+    } catch (err) {
+      console.error(err);
+      resetPrintLayout();
+      printFallback();
+    } finally {
+      resetPrintLayout();
+      busy.classList.remove('show');
+      btn.disabled = false;
+    }
   }
 
   window.addEventListener('beforeprint', fitToPage);
