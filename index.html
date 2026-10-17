@@ -108,6 +108,17 @@
     cursor: pointer; font-size: 14px; width: 26px; height: 26px;
   }
 
+  .titles-table { width: 78%; margin: 0 auto; }
+  .titles-table td.title-name { text-align: right; padding-right: 14px; font-weight: 500; }
+  .titles-table td.title-count { font-weight: 700; color: var(--primary); }
+  .titles-table td.title-count.invalid { outline: 2px solid #d9534f; background: #fdecea; }
+  .titles-table tbody td:first-child { border-right: 4px solid var(--accent); }
+  .titles-table tfoot td {
+    background: #fdf6dc !important; font-weight: 800; color: var(--text);
+    border-top: 2px solid var(--gold);
+  }
+  .titles-table tfoot td#titlesTotal { color: var(--primary); font-size: 1.08em; }
+
   .box {
     min-height: 110px; padding: 10px 12px;
     border: 1.5px dashed var(--border); border-radius: 12px;
@@ -175,6 +186,8 @@
   .print-mode table { font-size: 12.5px; }
   .print-mode th { padding: 5px 4px; line-height: 1.35; }
   .print-mode td { padding: 4px 5px; height: 8mm; line-height: 1.45; }
+  .print-mode .titles-table { width: 72%; font-size: 12.5px; }
+  .print-mode .titles-table td { height: 6.6mm; padding: 2px 5px; }
   .print-mode td, .print-mode .box { overflow: visible; word-wrap: break-word; overflow-wrap: anywhere; }
   .print-mode .box {
     min-height: 15mm; padding: 5px 10px; font-size: 13px; line-height: 1.6;
@@ -209,6 +222,7 @@
     body:not(.print-mode) .page { width: 100%; margin: 0; padding: 14px; }
     body:not(.print-mode) .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     body:not(.print-mode) .table-wrap table { min-width: 560px; }
+    body:not(.print-mode) .titles-table { width: 100%; }
     body:not(.print-mode) .title h1 { font-size: 20px; padding: 8px 22px; }
     body:not(.print-mode) .two-cols { grid-template-columns: 1fr; }
     body:not(.print-mode) .evidence { grid-template-columns: repeat(2, 1fr); }
@@ -269,6 +283,27 @@
     <tbody id="rows"></tbody>
   </table>
   </div>
+
+  <div class="section-title"><span class="label">إحصائية الطالبات الحاصلات على الألقاب القرائية</span></div>
+  <table class="titles-table">
+    <thead>
+      <tr>
+        <th>اللقب القرائي</th>
+        <th style="width:42%">عدد الطالبات الحاصلات على اللقب</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="title-name">قارئ مبتدئ</td><td class="title-count" contenteditable="true" inputmode="numeric" data-key="titleCount1"></td></tr>
+      <tr><td class="title-name">قارئ متقدم</td><td class="title-count" contenteditable="true" inputmode="numeric" data-key="titleCount2"></td></tr>
+      <tr><td class="title-name">قارئ متميز</td><td class="title-count" contenteditable="true" inputmode="numeric" data-key="titleCount3"></td></tr>
+      <tr><td class="title-name">قارئ محترف</td><td class="title-count" contenteditable="true" inputmode="numeric" data-key="titleCount4"></td></tr>
+      <tr><td class="title-name">سفيرة القراء</td><td class="title-count" contenteditable="true" inputmode="numeric" data-key="titleCount5"></td></tr>
+      <tr><td class="title-name">قارئ أسطوري</td><td class="title-count" contenteditable="true" inputmode="numeric" data-key="titleCount6"></td></tr>
+    </tbody>
+    <tfoot>
+      <tr class="titles-total"><td class="title-name">إجمالي الطالبات الحاصلات على الألقاب</td><td id="titlesTotal">0</td></tr>
+    </tfoot>
+  </table>
 
   <div class="section-title"><span class="label">مرئيات المعلمة</span></div>
   <div class="box" contenteditable="true" data-key="notes" data-placeholder="اكتبي مرئياتك وملاحظاتك هنا..."></div>
@@ -366,6 +401,36 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {}
   }
 
+  const titleCountEls = [...document.querySelectorAll('.title-count')];
+  const titlesTotalEl = document.getElementById('titlesTotal');
+
+  function toWesternDigits(s) {
+    return s.replace(/[\u0660-\u0669]/g, d => d.charCodeAt(0) - 0x0660)
+            .replace(/[\u06F0-\u06F9]/g, d => d.charCodeAt(0) - 0x06F0);
+  }
+
+  function updateTitlesTotal() {
+    let total = 0;
+    titleCountEls.forEach(el => {
+      const v = toWesternDigits(el.innerText).replace(/\s/g, '');
+      const ok = v === '' || /^\d+$/.test(v);
+      el.classList.toggle('invalid', !ok);
+      if (ok && v) total += parseInt(v, 10);
+    });
+    titlesTotalEl.textContent = total;
+  }
+
+  titleCountEls.forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+    el.addEventListener('input', updateTitlesTotal);
+    el.addEventListener('blur', () => {
+      const v = toWesternDigits(el.innerText).replace(/\s/g, '');
+      if (/^\d+$/.test(v)) el.innerText = String(parseInt(v, 10));
+      updateTitlesTotal();
+      save();
+    });
+  });
+
   function load() {
     let data = null;
     try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (_) {}
@@ -378,6 +443,7 @@
     if (!rowsEl.children.length) addRow();
     images = data.images || [];
     renderImages();
+    updateTitlesTotal();
   }
 
   function clearAll() {
@@ -386,6 +452,7 @@
     document.querySelectorAll('[data-key]').forEach(el => el.innerText = '');
     rowsEl.innerHTML = ''; images = []; renderImages();
     for (let i = 0; i < 4; i++) addRow();
+    updateTitlesTotal();
   }
 
   const MM = 96 / 25.4;
